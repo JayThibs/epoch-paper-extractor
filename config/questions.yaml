@@ -1,0 +1,20 @@
+- What is the total number of parameters in the model?
+- How much compute was used to train the model?
+- What dataset was used for training?
+- What is the model's architecture?
+- What are the key performance metrics reported?
+- What is the batch size used during training?
+- How many epochs was the model trained for?
+- What optimization algorithm was used?
+- What is the learning rate or learning rate schedule?
+- Are there any notable innovations in the model architecture or training process?
+- What hardware was used for training?
+- What is the inference time or computational requirements for inference?
+- Are there any reported limitations or biases of the model?
+- What is the model's performance on specific benchmarks or tasks?
+- How does the model compare to previous state-of-the-art models?
+- What is the energy consumption or carbon footprint of training?
+- Are there any ethical considerations or guidelines mentioned for using the model?
+- What is the license or usage restrictions for the model?
+- Who are the authors and what is their affiliation?
+- What is the publication date of the paper?
