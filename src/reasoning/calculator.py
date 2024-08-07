@@ -1,8 +1,8 @@
 import anthropic
 
 class ReasoningCalculator:
-    def __init__(self):
-        self.client = anthropic.Anthropic()
+    def __init__(self, anthropic_api_key):
+        self.client = anthropic.Anthropic(api_key=anthropic_api_key)
 
     def reason_and_calculate(self, combined_responses, questions):
         final_answers = {}

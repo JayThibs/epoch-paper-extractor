@@ -1,4 +1,5 @@
 import os
+import chardet
 from pylatexenc.latex2text import LatexNodes2Text
 
 class LaTeXProcessor:
@@ -10,8 +11,9 @@ class LaTeXProcessor:
         if not main_file:
             return None, []
 
-        with open(os.path.join(self.latex_dir, main_file), 'r') as f:
-            latex_content = f.read()
+        latex_content = self._read_file_with_encoding(os.path.join(self.latex_dir, main_file))
+        if latex_content is None:
+            return None, []
 
         text = LatexNodes2Text().latex_to_text(latex_content)
         images = self._extract_image_references(latex_content)
@@ -20,11 +22,23 @@ class LaTeXProcessor:
     def _find_main_tex_file(self):
         for file in os.listdir(self.latex_dir):
             if file.endswith('.tex'):
-                with open(os.path.join(self.latex_dir, file), 'r') as f:
-                    content = f.read()
-                    if '\\begin{document}' in content:
-                        return file
+                content = self._read_file_with_encoding(os.path.join(self.latex_dir, file))
+                if content and '\\begin{document}' in content:
+                    return file
         return None
+
+    def _read_file_with_encoding(self, file_path):
+        try:
+            with open(file_path, 'rb') as f:
+                raw_data = f.read()
+            detected = chardet.detect(raw_data)
+            encoding = detected['encoding']
+            
+            with open(file_path, 'r', encoding=encoding) as f:
+                return f.read()
+        except Exception as e:
+            print(f"Error reading file {file_path}: {str(e)}")
+            return None
 
     def _extract_image_references(self, latex_content):
         image_commands = ['\\includegraphics', '\\figure']

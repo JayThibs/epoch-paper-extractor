@@ -12,31 +12,36 @@ from src.user_interface.results_viewer import ResultsViewer
 import tkinter as tk
 import yaml
 from dotenv import load_dotenv
+import json
 
 def load_questions():
     with open('config/questions.yaml', 'r') as file:
         return yaml.safe_load(file)
 
-def process_paper(url, download_dir, openai_api_key):
+def process_paper(url, base_dir, openai_api_key, anthropic_api_key):
     # Download paper
-    downloader = PaperDownloader(download_dir)
-    pdf_path, source_path = downloader.download_paper(url)
+    downloader = PaperDownloader(base_dir)
+    pdf_path, latex_path, abstract, processed_dir, output_dir = downloader.download_paper(url)
 
     # Extract content
-    if source_path:
-        processor = LaTeXProcessor(source_path)
+    if latex_path:
+        processor = LaTeXProcessor(latex_path)
         text, image_references = processor.extract_content()
         image_paths = [(1, path) for path in image_references]  # Assume all images are on page 1 for LaTeX
     else:
         processor = PDFProcessor(pdf_path)
         text, images = processor.extract_content()
-        image_paths = ImageProcessor.save_images(images, download_dir)
+        image_paths = ImageProcessor.save_images(images, processed_dir)
+
+    # Prepend abstract to the text
+    if abstract:
+        text = f"Abstract:\n{abstract}\n\n{text}"
 
     # Load questions
     questions = load_questions()
 
     # Extract information
-    text_analyzer = TextAnalyzer()
+    text_analyzer = TextAnalyzer(anthropic_api_key)
     image_analyzer = ImageAnalyzer(openai_api_key)
     combined_analyzer = CombinedAnalyzer(text_analyzer, image_analyzer)
     
@@ -44,8 +49,12 @@ def process_paper(url, download_dir, openai_api_key):
     combined_responses = combined_analyzer.answer_questions(text_summary, image_summary, questions)
 
     # Reason and calculate
-    calculator = ReasoningCalculator()
+    calculator = ReasoningCalculator(anthropic_api_key)
     final_answers = calculator.reason_and_calculate(combined_responses, questions)
+
+    # Save results to output directory
+    with open(os.path.join(output_dir, 'results.json'), 'w') as f:
+        json.dump(final_answers, f, indent=2)
 
     # Run validation interface
     root = tk.Tk()
@@ -61,9 +70,17 @@ def process_paper(url, download_dir, openai_api_key):
 
 if __name__ == "__main__":
     load_dotenv()
-    url = "https://arxiv.org/abs/2307.09288"  # Llama 2 paper
-    download_dir = "data/raw"
+    urls = [
+        "https://arxiv.org/abs/2307.09288",  # Llama 2 paper
+        "https://arxiv.org/abs/2303.08774",  # GPT-4 paper
+        # Add more URLs here
+    ]
+    base_dir = "data"
     openai_api_key = os.getenv("OPENAI_API_KEY")
+    anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 
-    result = process_paper(url, download_dir, openai_api_key)
-    print(result)
+    for url in urls:
+        print(f"Processing paper: {url}")
+        result = process_paper(url, base_dir, openai_api_key, anthropic_api_key)
+        print(result)
+        print("\n" + "="*50 + "\n")  # Separator between papers
