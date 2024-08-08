@@ -87,28 +87,21 @@ def test_gpt4_vision_extraction(arxiv_id, output_folder):
     with open(metadata_path, "r") as f:
         figures = json.load(f)
     
-    extracted_info = {}
-    
     for figure in figures:
-        image_path = os.path.join(images_folder, f"page_{figure['page']}.png")
+        image_filename = f"page_{figure['page']}.png"
+        image_path = os.path.join(images_folder, image_filename)
         
-        # Check relevance using GPT-4-vision-preview (mini)
+        # Check relevance using GPT-4o-mini
         if check_figure_relevance(client, image_path, questions):
-            # Extract information using GPT-4-vision-preview
+            # Extract information using GPT-4o
             info = extract_information(client, image_path, questions)
-            extracted_info[f"Figure on page {figure['page']}"] = info
-    
-    # Save extracted information
-    output_path = os.path.join(output_pdf_folder, "extracted_figure_info.json")
-    with open(output_path, "w") as f:
-        json.dump(extracted_info, f, indent=2)
-    
-    print(f"Extracted information from {len(extracted_info)} relevant figures.")
-    print(f"Saved extracted information to {output_path}")
+            print(f"Image: {image_filename}")
+            print(f"Description: {info}")
+            print("-" * 50)
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python test_gpt4_vision_extraction.py <arxiv_id>")
+        print("Usage: python test_vision_info_extraction.py <arxiv_id>")
         sys.exit(1)
     
     arxiv_id = sys.argv[1]
