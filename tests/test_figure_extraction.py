@@ -14,35 +14,26 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 's
 
 from content_extraction.pdf_processor import PDFProcessor
 
-def visualize_figures(image, figures, output_path):
+def visualize_figures(image, figures, output_folder):
     """
-    Draw bounding boxes and captions on the image and save it.
-    Uses cv2 if available, otherwise falls back to PIL.
+    Extract and save individual figures from the image.
     """
-    if CV2_AVAILABLE:
-        img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-    else:
-        img = Image.fromarray(image)
-    
-    draw = ImageDraw.Draw(img)
-    
-    # Use a default font
-    try:
-        font = ImageFont.truetype("arial.ttf", 15)
-    except IOError:
-        font = ImageFont.load_default()
-
-    for figure in figures:
+    for i, figure in enumerate(figures):
         bbox = figure['bbox']
-        caption = figure['caption']
         
-        # Draw bounding box
-        draw.rectangle(bbox, outline="red", width=2)
+        # Extract the figure using the bounding box
+        figure_image = image[bbox[1]:bbox[3], bbox[0]:bbox[2]]
         
-        # Draw caption
-        draw.text((bbox[0], bbox[1] - 20), caption[:50], font=font, fill="red")
-    
-    img.save(output_path)
+        # Convert to PIL Image if using OpenCV
+        if CV2_AVAILABLE:
+            figure_image = Image.fromarray(cv2.cvtColor(figure_image, cv2.COLOR_BGR2RGB))
+        else:
+            figure_image = Image.fromarray(figure_image)
+        
+        # Save the extracted figure
+        output_path = os.path.join(output_folder, f"figure_{i+1}.png")
+        figure_image.save(output_path)
+        print(f"Saved figure {i+1} to {output_path}")
 
 def test_figure_extraction(pdf_path, output_folder):
     """
