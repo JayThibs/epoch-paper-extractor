@@ -1,3 +1,4 @@
+wheel
 streamlit
 python-dotenv
 anthropic
@@ -9,10 +10,12 @@ Pillow
 pylatexenc
 PyPDF2
 chardet
-transformers
-torch
 pdf2image
 pytesseract
 PyMuPDF
 opencv-python
 frontend
+timm
+einops
+transformers
+torch

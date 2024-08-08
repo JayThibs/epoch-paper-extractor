@@ -1,4 +1,4 @@
-import PyMuPDF as fitz 
+import pymupdf as fitz 
 from pdf2image import convert_from_path
 import cv2
 import numpy as np

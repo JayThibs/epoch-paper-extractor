@@ -1,0 +1,22 @@
+name: epoch-papers
+channels:
+  - defaults
+dependencies:
+  - streamlit
+  - python-dotenv
+  - requests
+  - Pillow
+  - chardet
+  - pip
+  - pip:
+      - wheel
+      - timm
+      - opencv-python
+      - PyMuPDF
+      - arxiv
+      - anthropic
+      - pylatexenc
+      - frontend
+      - einops
+      - pdf2image
+      - torch
