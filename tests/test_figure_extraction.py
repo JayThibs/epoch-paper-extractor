@@ -35,9 +35,9 @@ def visualize_figures(image, figures, output_folder, page_num):
 
     draw = ImageDraw.Draw(full_img)
 
-    # Use a default font
+    # Use a default font that supports Unicode
     try:
-        font = ImageFont.truetype("arial.ttf", 15)
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 15)
     except IOError:
         font = ImageFont.load_default()
 
@@ -46,10 +46,15 @@ def visualize_figures(image, figures, output_folder, page_num):
         caption = figure.get('caption', f'Figure {i+1}')
 
         # Draw bounding box on full image (without red lines)
-        draw.rectangle(bbox, outline=None, width=2)
+        draw.rectangle(bbox, outline="black", width=2)
 
-        # Draw caption on full image
-        draw.text((bbox[0], bbox[1] - 20), caption[:50], font=font, fill="black")
+        # Draw caption on full image, handling Unicode characters
+        try:
+            draw.text((bbox[0], bbox[1] - 20), caption[:50], font=font, fill="black")
+        except UnicodeEncodeError:
+            # Fallback to ASCII if Unicode fails
+            ascii_caption = caption.encode('ascii', 'ignore').decode('ascii')
+            draw.text((bbox[0], bbox[1] - 20), ascii_caption[:50], font=font, fill="black")
 
     # Save the full page image with bounding boxes and captions
     output_path = os.path.join(output_folder, f"page_{page_num}.png")
@@ -82,7 +87,8 @@ def test_figure_extraction(arxiv_id, raw_data_folder, output_folder):
     
     for page_num, image in images:
         page_figures = [fig for fig in figures if fig['page'] == page_num]
-        visualize_figures(image, page_figures, images_folder, page_num)
+        if page_figures:  # Only process pages with figures
+            visualize_figures(image, page_figures, images_folder, page_num)
     
     # Save extracted text
     text_path = os.path.join(output_pdf_folder, "extracted_text.txt")
