@@ -34,9 +34,18 @@ def visualize_figures(image, figures, output_folder, page_num):
         # Extract the figure using the bounding box
         figure_image = image[bbox[1]:bbox[3], bbox[0]:bbox[2]]
         
+        # Skip empty figures
+        if figure_image.size == 0:
+            print(f"Skipping empty figure {i+1} on page {page_num}")
+            continue
+        
         # Convert to PIL Image if using OpenCV
         if CV2_AVAILABLE:
-            figure_image = Image.fromarray(cv2.cvtColor(figure_image, cv2.COLOR_BGR2RGB))
+            try:
+                figure_image = Image.fromarray(cv2.cvtColor(figure_image, cv2.COLOR_BGR2RGB))
+            except cv2.error:
+                print(f"Error converting figure {i+1} on page {page_num}. Skipping.")
+                continue
         else:
             figure_image = Image.fromarray(figure_image)
         
