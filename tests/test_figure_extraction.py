@@ -33,29 +33,6 @@ def visualize_figures(image, figures, output_folder, page_num):
     else:
         full_img = Image.fromarray(image)
 
-    draw = ImageDraw.Draw(full_img)
-
-    # Use a default font that supports Unicode
-    try:
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 15)
-    except IOError:
-        font = ImageFont.load_default()
-
-    for i, figure in enumerate(figures):
-        bbox = figure['bbox']
-        caption = figure.get('caption', f'Figure {i+1}')
-
-        # Draw bounding box on full image (without red lines)
-        draw.rectangle(bbox, outline="black", width=2)
-
-        # Draw caption on full image, handling Unicode characters
-        try:
-            draw.text((bbox[0], bbox[1] - 20), caption[:50], font=font, fill="black")
-        except UnicodeEncodeError:
-            # Fallback to ASCII if Unicode fails
-            ascii_caption = caption.encode('ascii', 'ignore').decode('ascii')
-            draw.text((bbox[0], bbox[1] - 20), ascii_caption[:50], font=font, fill="black")
-
     # Save the full page image with bounding boxes and captions
     output_path = os.path.join(output_folder, f"page_{page_num}.png")
     full_img.save(output_path)
