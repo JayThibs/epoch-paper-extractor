@@ -26,7 +26,7 @@ def download_pdf(url, save_path):
 
 def visualize_figures(image, figures, output_folder, page_num):
     """
-    Extract individual figures and create a visualization of all figures on the page.
+    Create a visualization of all figures on the page.
     """
     if CV2_AVAILABLE:
         full_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
@@ -45,29 +45,6 @@ def visualize_figures(image, figures, output_folder, page_num):
         bbox = figure['bbox']
         caption = figure.get('caption', f'Figure {i+1}')
 
-        # Extract the figure using the bounding box
-        figure_image = image[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-        
-        # Skip empty figures
-        if figure_image.size == 0:
-            print(f"Skipping empty figure {i+1} on page {page_num}")
-            continue
-        
-        # Convert to PIL Image if using OpenCV
-        if CV2_AVAILABLE:
-            try:
-                figure_image = Image.fromarray(cv2.cvtColor(figure_image, cv2.COLOR_BGR2RGB))
-            except cv2.error:
-                print(f"Error converting figure {i+1} on page {page_num}. Skipping.")
-                continue
-        else:
-            figure_image = Image.fromarray(figure_image)
-        
-        # Save the extracted figure
-        figure_output_path = os.path.join(output_folder, f"page_{page_num}_figure_{i+1}.png")
-        figure_image.save(figure_output_path)
-        print(f"Saved figure {i+1} from page {page_num} to {figure_output_path}")
-
         # Draw bounding box on full image (without red lines)
         draw.rectangle(bbox, outline=None, width=2)
 
@@ -75,13 +52,13 @@ def visualize_figures(image, figures, output_folder, page_num):
         draw.text((bbox[0], bbox[1] - 20), caption[:50], font=font, fill="black")
 
     # Save the full page image with bounding boxes and captions
-    full_image_output_path = os.path.join(output_folder, f"page_{page_num}_figures_visualization.png")
-    full_img.save(full_image_output_path)
-    print(f"Saved visualization of all figures on page {page_num} to {full_image_output_path}")
+    output_path = os.path.join(output_folder, f"page_{page_num}.png")
+    full_img.save(output_path)
+    print(f"Saved visualization of figures on page {page_num} to {output_path}")
 
 def test_figure_extraction(arxiv_id, raw_data_folder, output_folder):
     """
-    Test figure extraction on a given arXiv ID PDF and save individual figures.
+    Test figure extraction on a given arXiv ID PDF and save visualizations.
     """
     # Create folders
     pdf_folder = os.path.join(raw_data_folder, arxiv_id)
