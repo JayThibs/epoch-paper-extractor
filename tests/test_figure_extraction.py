@@ -14,7 +14,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 's
 
 from content_extraction.pdf_processor import PDFProcessor
 
-def visualize_figures(image, figures, output_folder):
+def visualize_figures(image, figures, output_folder, page_num):
     """
     Extract and save individual figures from the image.
     """
@@ -30,28 +30,27 @@ def visualize_figures(image, figures, output_folder):
         else:
             figure_image = Image.fromarray(figure_image)
         
-        # Save the extracted figure
-        output_path = os.path.join(output_folder, f"figure_{i+1}.png")
+        # Save the extracted figure with page number in the filename
+        output_path = os.path.join(output_folder, f"page_{page_num}_figure_{i+1}.png")
         figure_image.save(output_path)
-        print(f"Saved figure {i+1} to {output_path}")
+        print(f"Saved figure {i+1} from page {page_num} to {output_path}")
 
 def test_figure_extraction(pdf_path, output_folder):
     """
-    Test figure extraction on a given PDF and save visualizations.
+    Test figure extraction on a given PDF and save individual figures.
     """
     processor = PDFProcessor(pdf_path)
     text, images, figures = processor.extract_content()
     
     print(f"Extracted {len(figures)} figures from the PDF.")
     
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
+    # Create a subfolder for images
+    images_folder = os.path.join(output_folder, "images")
+    os.makedirs(images_folder, exist_ok=True)
     
-    for i, (page_num, image) in enumerate(images):
-        output_path = os.path.join(output_folder, f"page_{page_num}_figures.png")
+    for page_num, image in images:
         page_figures = [fig for fig in figures if fig['page'] == page_num]
-        visualize_figures(image, page_figures, output_path)
-        print(f"Saved visualization for page {page_num} to {output_path}")
+        visualize_figures(image, page_figures, images_folder, page_num)
     
     # Save extracted text
     text_path = os.path.join(output_folder, "extracted_text.txt")
