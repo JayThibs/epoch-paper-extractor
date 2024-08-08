@@ -26,11 +26,25 @@ def download_pdf(url, save_path):
 
 def visualize_figures(image, figures, output_folder, page_num):
     """
-    Extract and save individual figures from the image.
+    Extract individual figures and create a visualization of all figures on the page.
     """
+    if CV2_AVAILABLE:
+        full_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    else:
+        full_img = Image.fromarray(image)
+
+    draw = ImageDraw.Draw(full_img)
+
+    # Use a default font
+    try:
+        font = ImageFont.truetype("arial.ttf", 15)
+    except IOError:
+        font = ImageFont.load_default()
+
     for i, figure in enumerate(figures):
         bbox = figure['bbox']
-        
+        caption = figure.get('caption', f'Figure {i+1}')
+
         # Extract the figure using the bounding box
         figure_image = image[bbox[1]:bbox[3], bbox[0]:bbox[2]]
         
@@ -49,10 +63,21 @@ def visualize_figures(image, figures, output_folder, page_num):
         else:
             figure_image = Image.fromarray(figure_image)
         
-        # Save the extracted figure with page number in the filename
-        output_path = os.path.join(output_folder, f"page_{page_num}_figure_{i+1}.png")
-        figure_image.save(output_path)
-        print(f"Saved figure {i+1} from page {page_num} to {output_path}")
+        # Save the extracted figure
+        figure_output_path = os.path.join(output_folder, f"page_{page_num}_figure_{i+1}.png")
+        figure_image.save(figure_output_path)
+        print(f"Saved figure {i+1} from page {page_num} to {figure_output_path}")
+
+        # Draw bounding box on full image (without red lines)
+        draw.rectangle(bbox, outline=None, width=2)
+
+        # Draw caption on full image
+        draw.text((bbox[0], bbox[1] - 20), caption[:50], font=font, fill="black")
+
+    # Save the full page image with bounding boxes and captions
+    full_image_output_path = os.path.join(output_folder, f"page_{page_num}_figures_visualization.png")
+    full_img.save(full_image_output_path)
+    print(f"Saved visualization of all figures on page {page_num} to {full_image_output_path}")
 
 def test_figure_extraction(arxiv_id, raw_data_folder, output_folder):
     """
