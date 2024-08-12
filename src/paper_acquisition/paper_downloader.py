@@ -25,23 +25,26 @@ class PaperDownloader:
         
         title, pdf_url, latex_url, abstract = self.arxiv_handler.get_paper_info(arxiv_id)
         
+        # Create a valid filename from the title
+        valid_filename = self._create_valid_filename(title)
+        
         # Create folders for the paper
-        raw_dir = os.path.join(self.base_dir, 'raw', arxiv_id)
-        processed_dir = os.path.join(self.base_dir, 'processed', arxiv_id)
-        output_dir = os.path.join(self.base_dir, 'output', arxiv_id)
+        raw_dir = os.path.join(self.base_dir, 'raw', valid_filename)
+        processed_dir = os.path.join(self.base_dir, 'processed', valid_filename)
+        output_dir = os.path.join(self.base_dir, 'output', valid_filename)
         
         os.makedirs(raw_dir, exist_ok=True)
         os.makedirs(processed_dir, exist_ok=True)
         os.makedirs(output_dir, exist_ok=True)
         
         # Download PDF
-        pdf_path = os.path.join(raw_dir, f"{arxiv_id}.pdf")
+        pdf_path = os.path.join(raw_dir, f"{valid_filename}.pdf")
         self._download_file(pdf_url, pdf_path)
         
         # Download and extract LaTeX source files
-        latex_path = os.path.join(raw_dir, f"{arxiv_id}_latex")
+        latex_path = os.path.join(raw_dir, f"{valid_filename}_latex")
         os.makedirs(latex_path, exist_ok=True)
-        source_file = os.path.join(latex_path, f"{arxiv_id}_source")
+        source_file = os.path.join(latex_path, f"{valid_filename}_source")
         self._download_file(latex_url, source_file)
         
         # Check if it's a gzip file or a tar.gz file
@@ -50,7 +53,7 @@ class PaperDownloader:
         elif self._is_tar_file(source_file):
             self._extract_tar(source_file, latex_path)
         else:
-            print(f"Unknown source file format for {arxiv_id}")
+            print(f"Unknown source file format for {valid_filename}")
         
         # Clean up the original source file
         os.remove(source_file)
@@ -88,3 +91,10 @@ class PaperDownloader:
     def _extract_tar(self, tar_path, extract_path):
         with tarfile.open(tar_path, 'r:gz') as tar:
             tar.extractall(path=extract_path)
+
+    def _create_valid_filename(self, title):
+        # Remove invalid characters and replace spaces with underscores
+        valid_chars = '-_.() abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+        filename = ''.join(c for c in title if c in valid_chars)
+        filename = filename.replace(' ', '_')
+        return filename[:255]  # Truncate to maximum filename length
