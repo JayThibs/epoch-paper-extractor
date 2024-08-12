@@ -4,9 +4,13 @@ import json
 from openai import OpenAI
 import base64
 import yaml
+from dotenv import load_dotenv
 
 # Add the src directory to the Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+
+# Load environment variables from .env file if it exists
+load_dotenv()
 
 def load_questions():
     with open('config/questions.yaml', 'r') as file:
@@ -68,7 +72,11 @@ Provide concise answers and specify which question(s) you're answering."""
 
 def test_gpt4_vision_extraction(arxiv_id, output_folder):
     # Set up OpenAI client
-    client = OpenAI()
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        api_key = input("Please enter your OpenAI API key: ")
+    
+    client = OpenAI(api_key=api_key)
     
     # Load questions
     questions = load_questions()
@@ -87,17 +95,23 @@ def test_gpt4_vision_extraction(arxiv_id, output_folder):
     with open(metadata_path, "r") as f:
         figures = json.load(f)
     
+    relevant_images_found = False
+    
     for figure in figures:
         image_filename = f"page_{figure['page']}.png"
         image_path = os.path.join(images_folder, image_filename)
         
         # Check relevance using GPT-4o-mini
         if check_figure_relevance(client, image_path, questions):
+            relevant_images_found = True
             # Extract information using GPT-4o
             info = extract_information(client, image_path, questions)
             print(f"Image: {image_filename}")
             print(f"Description: {info}")
             print("-" * 50)
+    
+    if not relevant_images_found:
+        print("There were no images of relevance to the specified questions in the entire PDF.")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
